@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ousi's Universe | 05.07</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Segoe+UI:wght@900&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #ff0055; --gold: #ffd700; }
+        
+        body, html { margin: 0; padding: 0; height: 100%; color: white; font-family: 'Segoe UI', sans-serif; overflow: hidden; background: #000; }
+        
+        /* الخلفية الخاصة بك */
+        #main-canvas { 
+            height: 100vh; display: flex; align-items: center; justify-content: center; 
+            background-image: url('background.jpg'); 
+            background-size: cover; background-position: center; position: relative;
+        }
+        .overlay { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 1; }
+        .vignette { position: fixed; inset: 0; pointer-events: none; box-shadow: inset 0 0 150px rgba(0,0,0,0.9); z-index: 5; }
+
+        /* المحتوى الرئيسي */
+        .content { text-align: center; z-index: 10; width: 90%; max-width: 450px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        
+        /* قسم المدارات */
+        .hero-section { position: relative; height: 35vh; min-height: 250px; display: flex; align-items: center; justify-content: center; width: 100%; margin-bottom: 20px; }
+        .target-title { font-size: 3rem; letter-spacing: 12px; margin: 0; font-weight: 900; background: linear-gradient(90deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; position: absolute; z-index: 2; }
+        .orbital-system { height: 100%; width: 100%; position: absolute; display: flex; justify-content: center; align-items: center; z-index: 1; }
+        
+        .node { width: 80px; height: 80px; border-radius: 50%; position: absolute; cursor: pointer; background-size: cover; background-position: center; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 0 15px rgba(0,0,0,0.6); }
+        .bubbles { background-image: url('bubbles.png'); }
+        .catwoman { background-image: url('catwoman.png'); }
+        .fluttershy { background-image: url('fluttershy.png'); }
+
+        /* العداد والمعلومات */
+        .info-section { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px; }
+        #timer { font-family: monospace; font-size: 1.2rem; color: var(--accent); letter-spacing: 3px; margin: 0; font-weight: bold; text-shadow: 0 0 10px rgba(255, 0, 85, 0.4); }
+        .status-box { min-height: 75px; padding: 0 10px; }
+        #status-text { line-height: 1.4; font-size: 0.85rem; color: #ddd; margin: 0; }
+        #status-text strong { display: block; color: white; font-size: 1rem; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; }
+
+        /* الأزرار */
+        .button-group { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        button { background: transparent; border: 1px solid white; color: white; padding: 12px; cursor: pointer; letter-spacing: 2px; font-size: 0.75rem; width: 85%; border-radius: 2px; text-transform: uppercase; transition: 0.3s; }
+        #video-trigger { border-color: var(--gold); color: var(--gold); background: rgba(255, 215, 0, 0.05); }
+        #hacker-trigger { border-color: rgba(255,255,255,0.4); font-size: 0.65rem; opacity: 0.8; }
+
+        /* مشغل الموسيقى الجانبي */
+        .music-player { position: fixed; top: 20px; left: 20px; z-index: 100; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); }
+        #music-disc { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); background: radial-gradient(circle, #333 20%, #000 100%); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        #music-disc::after { content: '♪'; color: white; font-size: 1rem; }
+
+        /* شاشات الفيديو والهكر */
+        #video-modal { position: fixed; inset: 0; background: #050505; z-index: 1000; display: none; align-items: center; justify-content: center; flex-direction: column; padding: 20px; }
+        .tv-frame { width: 100%; max-width: 600px; border: 8px solid #221a14; border-radius: 20px; background: #111; padding: 5px; position: relative; }
+        video { width: 100%; border-radius: 5px; }
+        .close-video { margin-top: 25px; color: #8b7d6b; cursor: pointer; font-family: 'Courier Prime', monospace; font-size: 0.85rem; letter-spacing: 2px; }
+        #hacker-screen { position: fixed; inset: 0; background: black; z-index: 2000; display: none; align-items: center; justify-content: center; color: #0f0; font-family: 'Courier Prime', monospace; padding: 20px; text-align: center; }
+
+        /* تم تعديل تاريخ الإنشاء هنا */
+        .footer-credit { position: fixed; bottom: 15px; right: 20px; font-size: 0.65rem; color: rgba(255,255,255,0.25); z-index: 10; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <div id="main-canvas">
+        <div class="overlay"></div>
+        <div class="vignette"></div>
+        
+        <div class="music-player">
+            <div id="music-disc"></div>
+            <div style="font-size: 0.6rem; color: rgba(255,255,255,0.4); text-transform: uppercase;">Playlist</div>
+            <audio id="bg-music"></audio>
+        </div>
+
+        <div class="content">
+            <div class="hero-section">
+                <h1 class="target-title">OUSI</h1>
+                <div class="orbital-system">
+                    <div class="node bubbles" onclick="trigger('bubbles')"></div>
+                    <div class="node catwoman" onclick="trigger('catwoman')"></div>
+                    <div class="node fluttershy" onclick="trigger('fluttershy')"></div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <div id="timer">00D 00H 00M 00S</div>
+                <div class="status-box">
+                    <p id="status-text">EXPLORE THE UNIVERSE</p>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button id="video-trigger">MEMORIES</button>
+                <button id="hacker-trigger">RUN SECURITY SCAN</button>
+            </div>
+        </div>
+        
+        <div class="footer-credit">Since April 28th by R</div>
+    </div>
+
+    <div id="video-modal">
+        <div class="tv-frame">
+            <video id="mainVideo" controls><source src="video.mp4" type="video/mp4"></video>
+        </div>
+        <div class="close-video" onclick="closeVideo()">[ CLOSE ARCHIVE ]</div>
+    </div>
+
+    <div id="hacker-screen"></div>
+
+    <script>
+        // 1. نظام الموسيقى
+        const songs = ['song1.mp3', 'song2.mp3', 'song3.mp3'];
+        let songIdx = 0;
+        const audio = document.getElementById('bg-music');
+        const disc = document.getElementById('music-disc');
+        let discRot = gsap.to(disc, { rotation: 360, duration: 4, repeat: -1, ease: "none", paused: true });
+
+        function loadSong(i) { audio.src = songs[i]; }
+        audio.onended = () => { songIdx = (songIdx + 1) % songs.length; loadSong(songIdx); audio.play(); };
+        disc.onclick = () => {
+            if (audio.paused) { audio.play(); discRot.play(); } 
+            else { audio.pause(); discRot.pause(); }
+        };
+        loadSong(songIdx);
+
+        // 2. العداد الذكي (تثبيت يوم 7 والعودة يوم 8)
+        function updateTimer() {
+            const now = new Date();
+            const year = now.getFullYear();
+            let bdayThisYear = new Date(year, 4, 7); 
+
+            if (now.getMonth() === 4 && now.getDate() === 7) {
+                document.getElementById('timer').innerText = "HAPPY BIRTHDAY OUSI! 🎉";
+                document.getElementById('timer').style.fontSize = "1.4rem";
+                return;
+            }
+
+            let target;
+            if (now < bdayThisYear) {
+                target = bdayThisYear;
+            } else {
+                target = new Date(year + 1, 4, 7);
+            }
+
+            const diff = target - now;
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            const fmt = (n) => n < 10 ? '0' + n : n;
+            document.getElementById('timer').innerText = `${fmt(d)}D ${fmt(h)}H ${fmt(m)}M ${fmt(s)}S`;
+            document.getElementById('timer').style.fontSize = "1.2rem";
+        }
+        setInterval(updateTimer, 1000);
+        updateTimer();
+
+        // 3. الفيديو والتحكم
+        const modal = document.getElementById('video-modal');
+        const video = document.getElementById('mainVideo');
+        document.getElementById('video-trigger').onclick = () => { modal.style.display = 'flex'; audio.pause(); discRot.pause(); };
+        function closeVideo() { modal.style.display = 'none'; video.pause(); }
+
+        // 4. مزحة الهكر
+        const hacker = document.getElementById('hacker-screen');
+        document.getElementById('hacker-trigger').onclick = () => {
+            hacker.style.display = 'flex';
+            hacker.innerHTML = '<p style="color:#0f0">> INITIALIZING STEALTH ACCESS...<br>> BYPASSING OUSI_FIREWALL...<br>> 100% GRANTED.</p>';
+            setTimeout(() => {
+                hacker.innerHTML = "<h1 style='color:white'>ACCESS GRANTED.<br>HAPPY BIRTHDAY OUSI! 🎉</h1>";
+                confetti({ particleCount: 150, spread: 70 });
+                setTimeout(() => { hacker.style.display = 'none'; }, 3000);
+            }, 2500);
+        };
+
+        // 5. المدارات
+        gsap.set(".bubbles", {x: -110, y: -45}); 
+        gsap.set(".catwoman", {x: 110, y: -45}); 
+        gsap.set(".fluttershy", {x: 0, y: 110});
+        gsap.to(".orbital-system", { rotation: 360, duration: 30, repeat: -1, ease: "none" });
+        gsap.to(".node", { rotation: -360, duration: 30, repeat: -1, ease: "none" });
+
+        const data = {
+            bubbles: { t: "Joyful Power", d: "Kindness and strength. Ousi is the soul of every moment.", c: "#00d2ff" },
+            catwoman: { t: "The Bold Queen", d: "Independent and sharp. Ousi makes her own rules.", c: "#ff0055" },
+            fluttershy: { t: "Gentle Heart", d: "Behind the strength lies a heart of gold. Always there.", c: "#f1ff5c" }
+        };
+
+        function trigger(c) {
+            document.getElementById('status-text').innerHTML = `<strong>${data[c].t}</strong>${data[c].d}`;
+            confetti({ particleCount: 30, colors: [data[c].c], origin: { y: 0.85 } });
+        }
+    </script>
+</body>
+</html>
